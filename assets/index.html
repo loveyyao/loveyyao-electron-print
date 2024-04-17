@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Loveyyao-print</title>
+  <link rel="stylesheet" href="./css/style.css"/>
+  <link
+    rel="stylesheet"
+    href="./element-ui/index.css"
+  />
+  <style>
+    .box {
+      padding: 30px 20px;
+      background: rgb(2, 0, 36);
+      background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(73, 119, 252, 1) 49%, rgba(0, 212, 255, 1) 100%);
+      color: #fff;
+    }
+
+    .flex {
+      margin-top: 20px;
+      display: flex;
+    }
+
+    .flex .message {
+      flex: 1;
+    }
+  </style>
+  <script src="./js/vue.min.js"></script>
+  <script src="./element-ui/index.js"></script>
+</head>
+
+<body>
+<div id="app" class="box">
+  <h1>
+    打印服务已启动
+  </h1>
+  <div style="margin-bottom: 8px">
+    服务地址：<span title="点击复制服务地址" @click="handleCopy">{{ ipAddress }}</span>
+  </div>
+  <div>
+    设备编号：<span title="点击复制设备编号" @click="handleCopy">{{ deviceId }}</span>
+  </div>
+  <div class="flex">
+    <div class="message">
+      本地连接：<span>{{ socketActiveNum ? `已连接` : '未连接' }}</span>
+    </div>
+    <div class="message">
+      打印状态：<span>{{ printing ? "文档打印中" : "空闲" }}</span>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+  const {ipcRenderer, clipboard} = require("electron");
+  const Store = require("electron-store");
+  const store = new Store();
+
+  document.title = store.get("mainTitle") || "Loveyyao-print";
+
+  new Vue({
+    el: "#app",
+    data: () => {
+      return {
+        ipAddress: '',
+        deviceId: '',
+        socketActiveNum: 0,
+        printing: false
+      };
+    },
+    created() {
+      ipcRenderer.send("getAddress");
+      ipcRenderer.on("address", (event, arg) => {
+        this.ipAddress = `http://${arg.ip}:${arg.port}`;
+        this.deviceId = arg.machineId
+      });
+      ipcRenderer.on("serverConnection", this.socketActive);
+    },
+    methods: {
+      handleCopy(event) {
+        clipboard.writeText(event.target.innerText);
+        ipcRenderer.send("notification", {
+          title: "复制成功",
+          body: "文本已成功复制到剪贴板中！",
+        });
+      },
+      socketActive(evnet, arg) {
+        this.socketActiveNum = arg;
+      }
+    },
+  });
+</script>
+</body>
+</html>

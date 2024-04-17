@@ -1,0 +1,65 @@
+{
+  "name": "loveyyao-print",
+  "version": "0.1.0",
+  "description": "electron print",
+  "main": "main.js",
+  "author": "loveyyao",
+  "scripts": {
+    "start": "chcp 65001 && electron .",
+    "build:win": "electron-builder -w nsis:ia32 && node ./src/utils/build.js --tag win_x32"
+  },
+  "build": {
+    "productName": "loveyyaoPrint",
+    "appId": "com.globalston.sys",
+    "copyright": "loveyyao",
+    "directories": {
+      "output": "out"
+    },
+    "asar": true,
+    "files": [
+      "**/*"
+    ],
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "./build/icon.ico",
+      "uninstallerIcon": "./build/icon.ico",
+      "installerHeaderIcon": "./build/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "loveyyaoPrint"
+    },
+    "dmg": {
+      "sign": false
+    },
+    "win": {
+      "icon": "./build/256x256.png",
+      "artifactName": "${productName}-${version}.${ext}",
+      "target": [
+        {
+          "target": "nsis"
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "address": "^1.2.0",
+    "dayjs": "^1.11.10",
+    "electron-store": "^8.1.0",
+    "node-machine-id": "^1.1.12",
+    "pdf-lib": "^1.17.1",
+    "pdf-to-printer": "^5.6.0",
+    "socket.io": "^3.1.0"
+  },
+  "devDependencies": {
+    "electron": "^15.0.0",
+    "electron-builder": "23.0.6",
+    "fs-extra": "^9.1.0",
+    "prettier": "^1.16.4",
+    "uglify-js": "^3.14.3"
+  }
+}
