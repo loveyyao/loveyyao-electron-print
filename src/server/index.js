@@ -3,6 +3,8 @@ const {store} = require("../store/index")
 const {DEFAULT_PORT} = require("../utils/constant");
 const {Notification, app} = require("electron");
 const address = require("address");
+const {printTask} = require("../print");
+const log = require("../utils/log");
 // socket.io 服务端，用于创建本地服务
 const ioServer = (SOCKET_SERVER = new require("socket.io")(server, {
   pingInterval: 10000,
@@ -38,6 +40,7 @@ function initServeEvent() {
   ioServer.on("connect", (socket) => {
     // 通知渲染进程已连接
     MAIN_WINDOW.webContents.send("serverConnection", ioServer.engine.clientsCount);
+    log('客户端连接')
     // 显示连接通知
     if (store.get("allowNotify")) {
       const notification = new Notification({
@@ -58,6 +61,7 @@ function initServeEvent() {
     })
     // 请求刷新打印机列表
     socket.on("refreshPrinterList", (taskId) => {
+      log('客户端获取打印机')
       const printerList = MAIN_WINDOW.webContents.getPrinters()
       socket.emit("getPrinterList", {
         data: printerList,
@@ -85,10 +89,24 @@ function initServeEvent() {
      * @param {string} options.taskId - 任务ID
      */
     socket.on("doPrint", (options) => {
-      // TODO 文件打印
+      printTask(options).then(() => {
+        socket.emit('printFinish', {
+          taskId: options.taskId,
+          success: true
+        })
+        log('文件打印，参数' + JSON.stringify(options) + '。成功')
+      }).catch((err) => {
+        socket.emit('printFinish', {
+          taskId: options.taskId,
+          success: false,
+          err
+        })
+        log('文件打印，参数' + JSON.stringify(options) + '。失败。err:' + JSON.stringify(err))
+      })
     })
     // 断开连接
     socket.on("disconnect", () => {
+      log('客户端断开连接')
       MAIN_WINDOW.webContents.send("serverConnection", ioServer.engine.clientsCount);
     });
   })
