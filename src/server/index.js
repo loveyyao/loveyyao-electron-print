@@ -89,6 +89,15 @@ function initServeEvent() {
      * @param {string} options.taskId - 任务ID
      */
     socket.on("doPrint", (options) => {
+      if (!options.url) {
+        socket.emit('printFinish', {
+          taskId: options.taskId,
+          success: false,
+          err: '文件路径不存在'
+        })
+        return
+      }
+      MAIN_WINDOW.webContents.send("doPrint", true);
       printTask(options).then(() => {
         socket.emit('printFinish', {
           taskId: options.taskId,
@@ -102,6 +111,8 @@ function initServeEvent() {
           err
         })
         log('文件打印，参数' + JSON.stringify(options) + '。失败。err:' + JSON.stringify(err))
+      }).finally(() => {
+        MAIN_WINDOW.webContents.send("doPrint", false);
       })
     })
     // 断开连接

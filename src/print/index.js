@@ -1,20 +1,23 @@
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
-const { print } = require('pdf-to-printer')
+const {PDFDocument} = require('pdf-lib');
+const sharp = require('sharp');
+const {print} = require('pdf-to-printer')
+
+const download_dir = path.resolve(__dirname, '../', '../assets/cache')
+//下载文件到指定的文件夹路径下，如果没有的话就创建一下
+if (!fs.existsSync(download_dir)) {
+  fs.mkdirSync(download_dir, {recursive: true});
+}
 
 // 文件下载到本地
 function downFile(url, fileName) {
   return new Promise(async (resolve, reject) => {
-    const download_dir = path.resolve(__dirname, '../', '../assets/cache')
     const local_path = path.join(download_dir, fileName);
-    //下载文件到指定的文件夹路径下，如果没有的话就创建一下
-    if (!fs.existsSync(download_dir)) {
-      fs.mkdirSync(download_dir, { recursive: true });
-    }
     const fileWriter = fs.createWriteStream(local_path);
     try {
-      const response = await axios.get(url, { responseType: "stream" });
+      const response = await axios.get(url, {responseType: "stream"});
       if (response.status === 200) {
         response.data.pipe(fileWriter);
         fileWriter.on("finish", () => {
@@ -29,10 +32,11 @@ function downFile(url, fileName) {
     }
   });
 }
+
 function delCacheFile(filePath) {
   try {
     //删除服务上的临时文件夹
-    fs.rm(filePath, { recursive: true }, (err) => {
+    fs.rm(filePath, {recursive: true}, (err) => {
       if (err) {
         throw err;
       } else {
@@ -42,6 +46,48 @@ function delCacheFile(filePath) {
     throw error;
   }
 }
+
+// 图格式转换
+function convertImage(inputFile) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const local_path = path.join(download_dir, new Date().getTime() + '.png');
+      await sharp(inputFile)
+        .toFile(local_path);
+      console.log('图片转换成功！');
+      resolve(local_path)
+    } catch (err) {
+      console.error('转换过程中发生错误：', err);
+      reject(err)
+    }
+  })
+}
+
+// 图片转PDF进行打印
+async function createPDFWithImage(imagePath) {
+  const pdfDoc = await PDFDocument.create()
+  // 将图片转换为数据流
+  const imageBuffer = fs.readFileSync(imagePath);
+
+  // 添加图片到文档中
+  const pdfImage = await pdfDoc.embedPng(imageBuffer);
+  // 创建一个页面，并将图片绘制到页面上
+  // TODO 处理成合适的图片大小
+  const page = pdfDoc.addPage([pdfImage.size().width, pdfImage.size().height]);
+  page.drawImage(pdfImage, {
+    x: 0,
+    y: 0,
+    width: pdfImage.size().width,
+    height: pdfImage.size().height
+  });
+
+  // 将文档保存到文件
+  const pdfBytes = await pdfDoc.save();
+  const local_path = path.join(download_dir, new Date().getTime() + '.pdf');
+  fs.writeFileSync(local_path, pdfBytes);
+  return local_path
+}
+
 /**
  * 文件打印
  * @param options
@@ -61,6 +107,17 @@ function delCacheFile(filePath) {
  * @param {string} options.taskId - 任务ID
  */
 function printPdf(options) {
+  return new Promise((resolve, reject) => {
+    downFile(options.url, new Date().getTime() + '.pdf').then(res => {
+      print(res, mergePrintOptions(options)).then(resolve).catch(reject).finally(() => {
+        // 打印完毕删除临时文件
+        // delCacheFile(res)
+      })
+    }).catch(reject)
+  })
+}
+
+function mergePrintOptions(options) {
   const printOptionsKeys = [
     'printer', 'pages', 'subset',
     'orientation', 'scale', 'monochrome',
@@ -73,13 +130,30 @@ function printPdf(options) {
       printOptions[key] = options[key]
     }
   })
+  return printOptions
+}
+
+// 图片打印
+function printImage(options) {
   return new Promise((resolve, reject) => {
-    downFile(options.url, new Date().getTime() + '.pdf').then(res => {
-      print(res, printOptions).then(resolve).catch(reject).finally(() => {
-        // 打印完毕删除临时文件
-        delCacheFile(res)
+    downFile(options.url, new Date().getTime() + '.' + options.type).then((res) => {
+      convertImage(res).then(async pngPath => {
+        try {
+          const imagePdfPath = await createPDFWithImage(pngPath)
+          print(imagePdfPath, mergePrintOptions(options)).then(resolve).catch(reject).finally(() => {
+            // 打印完毕删除临时文件
+            delCacheFile(imagePdfPath)
+            delCacheFile(pngPath)
+          })
+        } catch (e) {
+          reject(e)
+        }
+      }).catch(err => {
+        reject(err)
       })
-    }).catch(reject)
+    }).catch(err => {
+      reject(err)
+    })
   })
 }
 
@@ -87,6 +161,10 @@ function printTask(options) {
   switch (options.type) {
     case 'pdf':
       return printPdf(options)
+    case 'jpg':
+    case 'png':
+    case 'jpeg':
+      return printImage(options)
     default:
       return Promise.reject()
   }

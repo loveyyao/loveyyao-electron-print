@@ -73,6 +73,7 @@
         this.deviceId = arg.machineId
       });
       ipcRenderer.on("serverConnection", this.socketActive);
+      ipcRenderer.on("doPrint", this.getPrintStatus);
     },
     methods: {
       handleCopy(event) {
@@ -84,6 +85,9 @@
       },
       socketActive(evnet, arg) {
         this.socketActiveNum = arg;
+      },
+      getPrintStatus(evnet, arg) {
+        this.printing = arg;
       }
     },
   });
