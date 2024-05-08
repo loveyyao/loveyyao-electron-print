@@ -83,7 +83,7 @@ function initServeEvent() {
      * @param {boolean} options.silent - 使错误消息静音。
      * @param {boolean} options.printDialog - 显示此命令行上指示的所有文件的打印对话框。
      * @param {number} options.copies - 指定要打印的份数。
-     * @param {string} options.type - 'jpg', 'png', 'jpeg', 'docx', 'pdf'（必填）
+     * @param {string} options.type - 'jpg', 'png', 'docx', 'pdf'（必填）
      * @param {string} options.url - 文件路径（必填）
      * @param {string} options.name - 文件名（可选）
      * @param {string} options.taskId - 任务ID

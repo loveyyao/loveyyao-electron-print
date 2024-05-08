@@ -2,7 +2,6 @@ const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
 const {PDFDocument} = require('pdf-lib');
-const sharp = require('sharp');
 const {print} = require('pdf-to-printer')
 
 const download_dir = path.resolve(__dirname, '../', '../assets/cache')
@@ -47,30 +46,22 @@ function delCacheFile(filePath) {
   }
 }
 
-// 图格式转换
-function convertImage(inputFile) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const local_path = path.join(download_dir, new Date().getTime() + '.png');
-      await sharp(inputFile)
-        .toFile(local_path);
-      console.log('图片转换成功！');
-      resolve(local_path)
-    } catch (err) {
-      console.error('转换过程中发生错误：', err);
-      reject(err)
-    }
-  })
+// 根据图格式做处理
+async function embedImage(pdfDoc, imageBuffer, type) {
+  switch (type) {
+    case 'png':
+      return await pdfDoc.embedPng(imageBuffer);
+    default:
+      return await pdfDoc.embedJpg(imageBuffer);
+  }
 }
 
 // 图片转PDF进行打印
-async function createPDFWithImage(imagePath) {
+async function createPDFWithImage(imagePath, type) {
   const pdfDoc = await PDFDocument.create()
-  // 将图片转换为数据流
   const imageBuffer = fs.readFileSync(imagePath);
-
-  // 添加图片到文档中
-  const pdfImage = await pdfDoc.embedPng(imageBuffer);
+  // 将图片转换为数据流
+  const pdfImage = await embedImage(pdfDoc, imageBuffer, type)
   // 创建一个页面，并将图片绘制到页面上
   // TODO 处理成合适的图片大小
   const page = pdfDoc.addPage([pdfImage.size().width, pdfImage.size().height]);
@@ -136,21 +127,17 @@ function mergePrintOptions(options) {
 // 图片打印
 function printImage(options) {
   return new Promise((resolve, reject) => {
-    downFile(options.url, new Date().getTime() + '.' + options.type).then((res) => {
-      convertImage(res).then(async pngPath => {
-        try {
-          const imagePdfPath = await createPDFWithImage(pngPath)
-          print(imagePdfPath, mergePrintOptions(options)).then(resolve).catch(reject).finally(() => {
-            // 打印完毕删除临时文件
-            delCacheFile(imagePdfPath)
-            delCacheFile(pngPath)
-          })
-        } catch (e) {
-          reject(e)
-        }
-      }).catch(err => {
-        reject(err)
-      })
+    downFile(options.url, new Date().getTime() + '.' + options.type).then(async (res) => {
+      try {
+        const imagePdfPath = await createPDFWithImage(res, options.type)
+        print(imagePdfPath, mergePrintOptions(options)).then(resolve).catch(reject).finally(() => {
+          // 打印完毕删除临时文件
+          delCacheFile(imagePdfPath)
+          delCacheFile(res)
+        })
+      } catch (e) {
+        reject(e)
+      }
     }).catch(err => {
       reject(err)
     })

@@ -24,6 +24,7 @@ global.SOCKET_SERVER = null;
 
 // 程序初始化
 async function initialize() {
+  console.log(`Electron Node.js version: ${process.versions.node}`);
   // 限制一个窗口
   const gotTheLock = app.requestSingleInstanceLock();
   const machineId = machineIdSync({original: true})
