@@ -5,7 +5,7 @@ const {PDFDocument} = require('pdf-lib');
 const {print} = require('pdf-to-printer')
 const {app} = require("electron");
 
-const download_dir = app.getPath('downloads')
+const download_dir = app.getPath('cache')
 //下载文件到指定的文件夹路径下，如果没有的话就创建一下
 if (!fs.existsSync(download_dir)) {
   fs.mkdirSync(download_dir, {recursive: true});
