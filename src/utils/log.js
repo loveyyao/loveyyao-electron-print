@@ -1,9 +1,9 @@
 const { access, appendFile, constants, writeFile } = require("node:fs");
 const dayjs = require("dayjs");
-const path = require("path");
 const fs = require("fs");
+const {app} = require("electron");
 
-const logs = path.resolve(__dirname, '../', '../assets/logs')
+const logs = app.getPath('logs')
 if (!fs.existsSync(logs)) {
   fs.mkdirSync(logs, { recursive: true });
 }

@@ -15,6 +15,7 @@ const {getAddressAll, start} = require("./src/server/index");
 const {DEFAULT_PORT, MAIN_TITLE} = require("./src/utils/constant");
 
 const icon = path.join(__dirname, "build/icon.png");
+const trayIcon = path.join(app.getAppPath(), "assets/icons/icon.png");
 // 主进程
 global.MAIN_WINDOW = null;
 // 托盘
@@ -181,7 +182,7 @@ function systemSetup() {
 
 // 初始化托盘
 function initTray() {
-  APP_TRAY = new Tray(icon);
+  APP_TRAY = new Tray(trayIcon);
   // 托盘提示标题
   APP_TRAY.setToolTip("loveyyao-print");
   // 托盘菜单

@@ -26,7 +26,7 @@ class ReName {
 
   rename(args) {
     let that = this;
-    const pkgPath = path.join(that.basePath, "/package.json");
+    const pkgPath = path.join(that.basePath, "../package.json");
     let pkg = JSON.parse(fs.readFileSync(pkgPath));
     let version = pkg.version;
     let productName = pkg.build.productName;

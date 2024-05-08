@@ -3,8 +3,9 @@ const path = require('path')
 const axios = require('axios')
 const {PDFDocument} = require('pdf-lib');
 const {print} = require('pdf-to-printer')
+const {app} = require("electron");
 
-const download_dir = path.resolve(__dirname, '../', '../assets/cache')
+const download_dir = app.getPath('downloads')
 //下载文件到指定的文件夹路径下，如果没有的话就创建一下
 if (!fs.existsSync(download_dir)) {
   fs.mkdirSync(download_dir, {recursive: true});
@@ -102,7 +103,7 @@ function printPdf(options) {
     downFile(options.url, new Date().getTime() + '.pdf').then(res => {
       print(res, mergePrintOptions(options)).then(resolve).catch(reject).finally(() => {
         // 打印完毕删除临时文件
-        // delCacheFile(res)
+        delCacheFile(res)
       })
     }).catch(reject)
   })
