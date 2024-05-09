@@ -137,4 +137,7 @@ function install(Vue) {
   Vue.prototype.$loveyyaoPrint = new LoveyyaoPrint()
 }
 
-export default install
+export default {
+  LoveyyaoPrint,
+  install
+}
