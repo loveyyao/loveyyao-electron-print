@@ -1,13 +1,19 @@
 {
-  "name": "loveyyao-print",
+  "name": "loveyyao-electron-print",
   "version": "0.1.0",
-  "description": "electron print",
+  "description": "loveyyao-print 打印服务端",
+  "keywords": ["print", "pdf-print", "vue print", "electron print"],
   "main": "main.js",
   "author": "loveyyao",
   "scripts": {
     "start": "chcp 65001 && electron .",
     "build:win": "electron-builder -w nsis:ia32 && node ./src/utils/build.js --tag win_x32"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/loveyyao/loveyyao-electron-print"
+  },
+  "bugs": "https://github.com/loveyyao/loveyyao-electron-print/issues",
   "build": {
     "productName": "loveyyaoPrint",
     "appId": "com.loveyyao.https",
